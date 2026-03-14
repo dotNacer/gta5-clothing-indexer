@@ -1,12 +1,13 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { ClothingItem } from '../shared/types'
 
-// Custom APIs for renderer
-const api = {}
+const api = {
+  selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:selectFolder'),
+  scanFolder: (folderPath: string): Promise<ClothingItem[]> =>
+    ipcRenderer.invoke('indexer:scan', folderPath)
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
