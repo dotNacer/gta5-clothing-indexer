@@ -6,7 +6,6 @@
   import Viewer3D from './components/Viewer3D.svelte'
   import { getStore } from './lib/stores.svelte'
   import { getViewerStore } from './lib/viewer.svelte'
-  import { onMount } from 'svelte'
 
   const store = getStore()
   const viewer = getViewerStore()
@@ -16,13 +15,6 @@
       ? `${viewer.selectedItem.categoryLabel} #${String(viewer.selectedItem.componentNum).padStart(3, '0')}`
       : ''
   )
-
-  onMount(() => {
-    // Auto-load test folder for demo/testing
-    if (import.meta.env.DEV) {
-      store.autoLoadTestFolder()
-    }
-  })
 </script>
 
 <div class="h-screen flex flex-col bg-[#0a0a0b] text-stone-100 overflow-hidden">
