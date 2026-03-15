@@ -1,4 +1,4 @@
-import type { ClothingItem } from '../../../shared/types'
+import type { ClothingItem, ExportResult } from '../../../shared/types'
 
 let clothingItems = $state<ClothingItem[]>([])
 let searchQuery = $state('')
@@ -6,6 +6,9 @@ let genderFilter = $state<'all' | 'male' | 'female'>('all')
 let categoryFilter = $state<string>('all')
 let folderPath = $state<string | null>(null)
 let isScanning = $state(false)
+let selectedForExport = $state(new Set<string>())
+let isExporting = $state(false)
+let lastExportResult = $state<ExportResult | null>(null)
 
 const filteredItems = $derived.by(() => {
   let result = clothingItems
@@ -45,6 +48,10 @@ const availableCategories = $derived.by(() => {
 
 const totalCount = $derived(clothingItems.length)
 const filteredCount = $derived(filteredItems.length)
+const selectedForExportCount = $derived(selectedForExport.size)
+const selectedExportItems = $derived.by(() =>
+  clothingItems.filter((i) => selectedForExport.has(i.id))
+)
 
 export function getStore() {
   return {
@@ -86,6 +93,65 @@ export function getStore() {
     },
     get filteredCount() {
       return filteredCount
+    },
+    get selectedForExport() {
+      return selectedForExport
+    },
+    get selectedForExportCount() {
+      return selectedForExportCount
+    },
+    get selectedExportItems() {
+      return selectedExportItems
+    },
+    get isExporting() {
+      return isExporting
+    },
+    get lastExportResult() {
+      return lastExportResult
+    },
+
+    toggleExportSelection(itemId: string) {
+      if (selectedForExport.has(itemId)) {
+        selectedForExport.delete(itemId)
+      } else {
+        selectedForExport.add(itemId)
+      }
+    },
+
+    selectAllFiltered() {
+      for (const item of filteredItems) {
+        selectedForExport.add(item.id)
+      }
+    },
+
+    clearExportSelection() {
+      selectedForExport.clear()
+    },
+
+    isSelectedForExport(itemId: string): boolean {
+      return selectedForExport.has(itemId)
+    },
+
+    async exportSelected(): Promise<ExportResult | null> {
+      const items = clothingItems.filter((i) => selectedForExport.has(i.id))
+      if (items.length === 0) return null
+
+      isExporting = true
+      lastExportResult = null
+      try {
+        const result = await window.api.exportItems(items)
+        if (result) {
+          lastExportResult = result
+          selectedForExport.clear()
+        }
+        return result
+      } finally {
+        isExporting = false
+      }
+    },
+
+    dismissExportResult() {
+      lastExportResult = null
     },
 
     async selectAndScan() {

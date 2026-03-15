@@ -1,13 +1,11 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import type { ClothingItem } from '../shared/types'
+import type { ClothingItem, ExportResult } from '../shared/types'
 
 interface ClothingIndexerAPI {
   selectFolder(): Promise<string | null>
   scanFolder(folderPath: string): Promise<ClothingItem[]>
-  convertClothing(
-    yddPath: string,
-    ytdPath?: string
-  ): Promise<{ glbUrl?: string; error?: string }>
+  convertClothing(yddPath: string, ytdPath?: string): Promise<{ glbUrl?: string; error?: string }>
+  exportItems(items: ClothingItem[]): Promise<ExportResult | null>
 }
 
 declare global {

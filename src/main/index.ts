@@ -9,6 +9,7 @@ import { parseFiles } from './lib/parser'
 import { buildIndex } from './lib/indexer'
 import { convertToGlb } from './converter'
 import { getCacheDir } from './cache'
+import { exportItems } from './lib/exporter'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -83,18 +84,27 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle(
-    'converter:convert',
-    async (_event, yddPath: string, ytdPath?: string) => {
-      try {
-        const glbPath = await convertToGlb(yddPath, ytdPath)
-        const glbFileName = path.basename(glbPath)
-        const glbUrl = 'glb://model/' + encodeURIComponent(glbFileName)
-        return { glbUrl }
-      } catch (err) {
-        return { error: err instanceof Error ? err.message : String(err) }
-      }
+    'export:execute',
+    async (_event, items: import('../shared/types').ClothingItem[]) => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory', 'createDirectory'],
+        title: "Choisir le dossier d'export"
+      })
+      if (result.canceled || result.filePaths.length === 0) return null
+      return exportItems(items, result.filePaths[0])
     }
   )
+
+  ipcMain.handle('converter:convert', async (_event, yddPath: string, ytdPath?: string) => {
+    try {
+      const glbPath = await convertToGlb(yddPath, ytdPath)
+      const glbFileName = path.basename(glbPath)
+      const glbUrl = 'glb://model/' + encodeURIComponent(glbFileName)
+      return { glbUrl }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) }
+    }
+  })
 
   createWindow()
 

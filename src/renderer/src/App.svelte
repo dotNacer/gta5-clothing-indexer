@@ -4,6 +4,8 @@
   import ClothingGrid from './components/ClothingGrid.svelte'
   import EmptyState from './components/EmptyState.svelte'
   import Viewer3D from './components/Viewer3D.svelte'
+  import ExportBar from './components/ExportBar.svelte'
+  import ExportToast from './components/ExportToast.svelte'
   import { getStore } from './lib/stores.svelte'
   import { getViewerStore } from './lib/viewer.svelte'
 
@@ -37,11 +39,17 @@
       onCategoryChange={(v) => (store.categoryFilter = v)}
     />
     <div class="flex-1 flex min-h-0">
-      <div class="transition-all duration-300 ease-in-out min-h-0 flex flex-col {viewer.isOpen ? 'w-2/5' : 'w-full'}">
+      <div
+        class="transition-all duration-300 ease-in-out min-h-0 flex flex-col {viewer.isOpen
+          ? 'w-2/5'
+          : 'w-full'}"
+      >
         <ClothingGrid
           items={store.filteredItems}
           selectedItemId={viewer.selectedItem?.id}
+          selectedForExport={store.selectedForExport}
           onSelect={(item) => viewer.selectItem(item)}
+          onToggleExport={(item) => store.toggleExportSelection(item.id)}
         />
       </div>
       {#if viewer.isOpen}
@@ -59,14 +67,35 @@
   {:else if store.isScanning}
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center">
-        <svg class="w-8 h-8 animate-spin text-orange-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        <svg
+          class="w-8 h-8 animate-spin text-orange-500 mx-auto mb-4"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          ></path>
         </svg>
         <p class="text-sm text-stone-500">Indexation en cours...</p>
       </div>
     </div>
   {:else}
     <EmptyState onSelectFolder={() => store.selectAndScan()} />
+  {/if}
+
+  <ExportBar
+    selectedCount={store.selectedForExportCount}
+    isExporting={store.isExporting}
+    onSelectAll={() => store.selectAllFiltered()}
+    onClearSelection={() => store.clearExportSelection()}
+    onExport={() => store.exportSelected()}
+  />
+
+  {#if store.lastExportResult}
+    <ExportToast result={store.lastExportResult} onDismiss={() => store.dismissExportResult()} />
   {/if}
 </div>

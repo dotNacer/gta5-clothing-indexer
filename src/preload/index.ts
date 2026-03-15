@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { ClothingItem } from '../shared/types'
+import type { ClothingItem, ExportResult } from '../shared/types'
 
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:selectFolder'),
@@ -10,7 +10,9 @@ const api = {
     yddPath: string,
     ytdPath?: string
   ): Promise<{ glbUrl?: string; error?: string }> =>
-    ipcRenderer.invoke('converter:convert', yddPath, ytdPath)
+    ipcRenderer.invoke('converter:convert', yddPath, ytdPath),
+  exportItems: (items: ClothingItem[]): Promise<ExportResult | null> =>
+    ipcRenderer.invoke('export:execute', items)
 }
 
 if (process.contextIsolated) {
