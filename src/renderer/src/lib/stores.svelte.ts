@@ -105,6 +105,17 @@ export function getStore() {
       searchQuery = ''
       genderFilter = 'all'
       categoryFilter = 'all'
+    },
+
+    async autoLoadTestFolder() {
+      const testPath = '/tmp/test-clothing'
+      folderPath = testPath
+      isScanning = true
+      try {
+        clothingItems = await window.api.scanFolder(testPath)
+      } finally {
+        isScanning = false
+      }
     }
   }
 }
