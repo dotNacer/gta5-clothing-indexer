@@ -1,8 +1,12 @@
 <script lang="ts">
   import type { ClothingItem } from '../../../shared/types'
 
-  type Props = { item: ClothingItem }
-  let { item }: Props = $props()
+  type Props = {
+    item: ClothingItem
+    isSelected?: boolean
+    onSelect?: (item: ClothingItem) => void
+  }
+  let { item, isSelected = false, onSelect }: Props = $props()
 
   const genderLabel = $derived(
     item.gender === 'male' ? 'M' : item.gender === 'female' ? 'F' : '?'
@@ -31,7 +35,12 @@
   )
 </script>
 
-<div class="group rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-orange-500/20 hover:bg-white/[0.04] transition-all overflow-hidden">
+<button
+  onclick={() => onSelect?.(item)}
+  class="group rounded-xl text-left w-full border transition-all overflow-hidden {isSelected
+    ? 'bg-orange-500/[0.06] border-orange-500/30 ring-1 ring-orange-500/20'
+    : 'bg-white/[0.02] border-white/[0.05] hover:border-orange-500/20 hover:bg-white/[0.04]'}"
+>
   <div class="aspect-square bg-gradient-to-br from-white/[0.02] to-transparent flex items-center justify-center relative">
     <div class="text-center">
       <span class="block text-2xl font-bold text-stone-600 uppercase tracking-wider">{item.category}</span>
@@ -61,4 +70,4 @@
       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.04] text-stone-500 uppercase">{item.variant}</span>
     </div>
   </div>
-</div>
+</button>

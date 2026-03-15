@@ -5,7 +5,12 @@ import type { ClothingItem } from '../shared/types'
 const api = {
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:selectFolder'),
   scanFolder: (folderPath: string): Promise<ClothingItem[]> =>
-    ipcRenderer.invoke('indexer:scan', folderPath)
+    ipcRenderer.invoke('indexer:scan', folderPath),
+  convertClothing: (
+    yddPath: string,
+    ytdPath?: string
+  ): Promise<{ glbUrl?: string; error?: string }> =>
+    ipcRenderer.invoke('converter:convert', yddPath, ytdPath)
 }
 
 if (process.contextIsolated) {

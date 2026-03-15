@@ -2,8 +2,12 @@
   import type { ClothingItem } from '../../../shared/types'
   import ClothingCard from './ClothingCard.svelte'
 
-  type Props = { items: ClothingItem[] }
-  let { items }: Props = $props()
+  type Props = {
+    items: ClothingItem[]
+    selectedItemId?: string | null
+    onSelect?: (item: ClothingItem) => void
+  }
+  let { items, selectedItemId = null, onSelect }: Props = $props()
 </script>
 
 {#if items.length === 0}
@@ -14,7 +18,7 @@
   <div class="flex-1 overflow-y-auto p-6">
     <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
       {#each items as item (item.id)}
-        <ClothingCard {item} />
+        <ClothingCard {item} isSelected={item.id === selectedItemId} {onSelect} />
       {/each}
     </div>
   </div>

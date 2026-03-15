@@ -3,9 +3,18 @@
   import FilterBar from './components/FilterBar.svelte'
   import ClothingGrid from './components/ClothingGrid.svelte'
   import EmptyState from './components/EmptyState.svelte'
+  import Viewer3D from './components/Viewer3D.svelte'
   import { getStore } from './lib/stores.svelte'
+  import { getViewerStore } from './lib/viewer.svelte'
 
   const store = getStore()
+  const viewer = getViewerStore()
+
+  const viewerLabel = $derived(
+    viewer.selectedItem
+      ? `${viewer.selectedItem.categoryLabel} #${String(viewer.selectedItem.componentNum).padStart(3, '0')}`
+      : ''
+  )
 </script>
 
 <div class="h-screen flex flex-col bg-[#0a0a0b] text-stone-100 overflow-hidden">
@@ -27,7 +36,26 @@
       onGenderChange={(v) => (store.genderFilter = v)}
       onCategoryChange={(v) => (store.categoryFilter = v)}
     />
-    <ClothingGrid items={store.filteredItems} />
+    <div class="flex-1 flex min-h-0">
+      <div class="transition-all duration-300 ease-in-out min-h-0 flex flex-col {viewer.isOpen ? 'w-2/5' : 'w-full'}">
+        <ClothingGrid
+          items={store.filteredItems}
+          selectedItemId={viewer.selectedItem?.id}
+          onSelect={(item) => viewer.selectItem(item)}
+        />
+      </div>
+      {#if viewer.isOpen}
+        <div class="w-3/5 border-l border-white/[0.06] min-h-0">
+          <Viewer3D
+            glbUrl={viewer.glbUrl}
+            isConverting={viewer.isConverting}
+            error={viewer.error}
+            itemLabel={viewerLabel}
+            onClose={() => viewer.closeViewer()}
+          />
+        </div>
+      {/if}
+    </div>
   {:else if store.isScanning}
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center">
