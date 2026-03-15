@@ -1,7 +1,8 @@
 import { execFile } from 'child_process'
+import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
-import { getGlbPath, isConverted } from './cache'
+import { getGlbPath, getCacheDir, isConverted } from './cache'
 
 function getConverterPath(): string {
   if (app.isPackaged) {
@@ -19,9 +20,10 @@ export function convertToGlb(yddPath: string, ytdPath?: string): Promise<string>
   }
 
   return new Promise((resolve, reject) => {
-    const args = [yddPath]
-    if (ytdPath) args.push(ytdPath)
-    args.push(glbPath)
+    const args: string[] = [yddPath]
+    if (ytdPath) {
+      args.push(ytdPath, glbPath)
+    }
 
     execFile(getConverterPath(), args, { timeout: 60_000 }, (error, stdout, stderr) => {
       if (error) {
@@ -35,7 +37,16 @@ export function convertToGlb(yddPath: string, ytdPath?: string): Promise<string>
         return
       }
 
-      resolve(glbPath)
+      if (ytdPath) {
+        resolve(glbPath)
+      } else {
+        const cliOutputPath = output.replace(/^OK\s+/, '')
+        if (cliOutputPath !== glbPath) {
+          fs.copyFileSync(cliOutputPath, glbPath)
+          fs.unlinkSync(cliOutputPath)
+        }
+        resolve(glbPath)
+      }
     })
   })
 }

@@ -24,7 +24,7 @@
 </script>
 
 {#key url}
-  <T.Group scale={[modelScale, modelScale, modelScale]}>
+  <T.Group scale={[modelScale, modelScale, modelScale]} rotation.x={-Math.PI / 2}>
     <GLTF
       {url}
       position={modelOffset}
