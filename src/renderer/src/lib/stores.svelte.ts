@@ -9,6 +9,8 @@ let isScanning = $state(false)
 let selectedForExport = $state(new Set<string>())
 let isExporting = $state(false)
 let lastExportResult = $state<ExportResult | null>(null)
+let showExportPreview = $state(false)
+let exportProgress = $state<{ copied: number; total: number } | null>(null)
 
 const filteredItems = $derived.by(() => {
   let result = clothingItems
@@ -109,43 +111,72 @@ export function getStore() {
     get lastExportResult() {
       return lastExportResult
     },
+    get showExportPreview() {
+      return showExportPreview
+    },
+    get exportProgress() {
+      return exportProgress
+    },
 
     toggleExportSelection(itemId: string) {
-      if (selectedForExport.has(itemId)) {
-        selectedForExport.delete(itemId)
+      const next = new Set(selectedForExport)
+      if (next.has(itemId)) {
+        next.delete(itemId)
       } else {
-        selectedForExport.add(itemId)
+        next.add(itemId)
       }
+      selectedForExport = next
     },
 
     selectAllFiltered() {
+      const next = new Set(selectedForExport)
       for (const item of filteredItems) {
-        selectedForExport.add(item.id)
+        next.add(item.id)
       }
+      selectedForExport = next
     },
 
     clearExportSelection() {
-      selectedForExport.clear()
+      selectedForExport = new Set()
     },
 
     isSelectedForExport(itemId: string): boolean {
       return selectedForExport.has(itemId)
     },
 
-    async exportSelected(): Promise<ExportResult | null> {
+    requestExport() {
+      const items = clothingItems.filter((i) => selectedForExport.has(i.id))
+      if (items.length === 0) return
+      showExportPreview = true
+    },
+
+    cancelExportPreview() {
+      showExportPreview = false
+    },
+
+    async confirmAndExport(): Promise<ExportResult | null> {
+      showExportPreview = false
       const items = clothingItems.filter((i) => selectedForExport.has(i.id))
       if (items.length === 0) return null
 
       isExporting = true
       lastExportResult = null
+      exportProgress = null
+
+      const unsubscribe = window.api.onExportProgress?.((data) => {
+        exportProgress = data
+      })
+
       try {
-        const result = await window.api.exportItems(items)
+        const result = await window.api.exportItems($state.snapshot(items))
         if (result) {
           lastExportResult = result
-          selectedForExport.clear()
+          selectedForExport = new Set()
         }
         return result
       } finally {
+        unsubscribe?.()
+        exportProgress = null
         isExporting = false
       }
     },

@@ -5,8 +5,13 @@
     onSelectAll: () => void
     onClearSelection: () => void
     onExport: () => void
+    exportProgress?: { copied: number; total: number } | null
   }
-  let { selectedCount, isExporting, onSelectAll, onClearSelection, onExport }: Props = $props()
+  let { selectedCount, isExporting, onSelectAll, onClearSelection, onExport, exportProgress = null }: Props = $props()
+
+  const progressPercent = $derived(
+    exportProgress ? Math.round((exportProgress.copied / exportProgress.total) * 100) : 0
+  )
 </script>
 
 {#if selectedCount > 0}
@@ -52,7 +57,11 @@
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             ></path>
           </svg>
-          Export en cours...
+          {#if exportProgress}
+            {exportProgress.copied} / {exportProgress.total} fichiers ({progressPercent}%)
+          {:else}
+            Export en cours...
+          {/if}
         {:else}
           <svg
             class="w-4 h-4"

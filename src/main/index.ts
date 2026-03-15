@@ -85,13 +85,16 @@ app.whenReady().then(() => {
 
   ipcMain.handle(
     'export:execute',
-    async (_event, items: import('../shared/types').ClothingItem[]) => {
+    async (event, items: import('../shared/types').ClothingItem[]) => {
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: "Choisir le dossier d'export"
       })
       if (result.canceled || result.filePaths.length === 0) return null
-      return exportItems(items, result.filePaths[0])
+      const win = BrowserWindow.fromWebContents(event.sender)
+      return exportItems(items, result.filePaths[0], (copied, total) => {
+        win?.webContents.send('export:progress', { copied, total })
+      })
     }
   )
 

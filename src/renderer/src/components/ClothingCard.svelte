@@ -42,9 +42,12 @@
   }
 </script>
 
-<button
+<div
+  role="button"
+  tabindex="0"
   onclick={() => onSelect?.(item)}
-  class="group rounded-xl text-left w-full border transition-all overflow-hidden relative {isExportSelected
+  onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onSelect?.(item))}
+  class="group rounded-xl text-left w-full border transition-all overflow-hidden relative cursor-pointer {isExportSelected
     ? 'bg-violet-500/[0.06] border-violet-500/30 ring-1 ring-violet-500/20'
     : isSelected
       ? 'bg-orange-500/[0.06] border-orange-500/30 ring-1 ring-orange-500/20'
@@ -53,12 +56,14 @@
   <div
     class="aspect-square bg-gradient-to-br from-white/[0.02] to-transparent flex items-center justify-center relative"
   >
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
+    <button
+      type="button"
+      aria-label={isExportSelected ? 'Désélectionner pour l\'export' : 'Sélectionner pour l\'export'}
+      aria-pressed={isExportSelected}
       onclick={handleCheckboxClick}
       class="absolute top-2 left-2 z-10 w-5 h-5 rounded border-2 flex items-center justify-center transition-all cursor-pointer {isExportSelected
         ? 'bg-violet-500 border-violet-500'
-        : 'border-white/20 bg-white/[0.04] opacity-0 group-hover:opacity-100'}"
+        : 'border-white/15 bg-white/[0.03] hover:border-white/30'}"
     >
       {#if isExportSelected}
         <svg
@@ -71,7 +76,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       {/if}
-    </div>
+    </button>
 
     <div class="text-center">
       <span class="block text-2xl font-bold text-stone-600 uppercase tracking-wider"
@@ -106,8 +111,8 @@
       <span class="px-1.5 py-0.5 rounded text-[10px] font-medium {statusColor}">{statusLabel}</span>
       <span
         class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-white/[0.04] text-stone-500 uppercase"
-        >{item.variant}</span
+        >{item.variant}      </span
       >
     </div>
   </div>
-</button>
+</div>

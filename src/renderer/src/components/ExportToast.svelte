@@ -70,7 +70,9 @@
       </div>
 
       <button
+        type="button"
         onclick={onDismiss}
+        aria-label="Fermer"
         class="shrink-0 p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer {hasErrors
           ? 'text-amber-300/60'
           : 'text-emerald-300/60'}"

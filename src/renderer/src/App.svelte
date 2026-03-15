@@ -6,11 +6,17 @@
   import Viewer3D from './components/Viewer3D.svelte'
   import ExportBar from './components/ExportBar.svelte'
   import ExportToast from './components/ExportToast.svelte'
+  import ExportPreview from './components/ExportPreview.svelte'
   import { getStore } from './lib/stores.svelte'
   import { getViewerStore } from './lib/viewer.svelte'
+  import { computeExportPreview } from '../../shared/exportUtils'
 
   const store = getStore()
   const viewer = getViewerStore()
+
+  const exportPreviewGroups = $derived(
+    store.showExportPreview ? computeExportPreview(store.selectedExportItems) : []
+  )
 
   const viewerLabel = $derived(
     viewer.selectedItem
@@ -92,8 +98,17 @@
     isExporting={store.isExporting}
     onSelectAll={() => store.selectAllFiltered()}
     onClearSelection={() => store.clearExportSelection()}
-    onExport={() => store.exportSelected()}
+    onExport={() => store.requestExport()}
+    exportProgress={store.exportProgress}
   />
+
+  {#if store.showExportPreview}
+    <ExportPreview
+      groups={exportPreviewGroups}
+      onConfirm={() => store.confirmAndExport()}
+      onCancel={() => store.cancelExportPreview()}
+    />
+  {/if}
 
   {#if store.lastExportResult}
     <ExportToast result={store.lastExportResult} onDismiss={() => store.dismissExportResult()} />

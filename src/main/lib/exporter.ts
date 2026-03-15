@@ -22,7 +22,8 @@ function computeNewFilename(
 
 export async function exportItems(
   items: ClothingItem[],
-  outputFolder: string
+  outputFolder: string,
+  onProgress?: (copied: number, total: number) => void
 ): Promise<ExportResult> {
   const grouped = new Map<string, ClothingItem[]>()
   for (const item of items) {
@@ -64,16 +65,25 @@ export async function exportItems(
 
   await mkdir(outputFolder, { recursive: true })
 
+  const BATCH_SIZE = 10
   let exportedFiles = 0
-  for (const mapping of mappings) {
-    try {
-      await copyFile(mapping.sourcePath, join(outputFolder, mapping.destName))
-      exportedFiles++
-    } catch (err) {
-      errors.push(
-        `${basename(mapping.sourcePath)}: ${err instanceof Error ? err.message : String(err)}`
-      )
+
+  for (let i = 0; i < mappings.length; i += BATCH_SIZE) {
+    const batch = mappings.slice(i, i + BATCH_SIZE)
+    const results = await Promise.allSettled(
+      batch.map((m) => copyFile(m.sourcePath, join(outputFolder, m.destName)))
+    )
+    for (let j = 0; j < results.length; j++) {
+      if (results[j].status === 'fulfilled') {
+        exportedFiles++
+      } else {
+        const reason = (results[j] as PromiseRejectedResult).reason
+        errors.push(
+          `${basename(batch[j].sourcePath)}: ${reason instanceof Error ? reason.message : String(reason)}`
+        )
+      }
     }
+    onProgress?.(exportedFiles, mappings.length)
   }
 
   return { exportedFiles, outputFolder, errors }

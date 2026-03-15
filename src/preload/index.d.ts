@@ -6,6 +6,7 @@ interface ClothingIndexerAPI {
   scanFolder(folderPath: string): Promise<ClothingItem[]>
   convertClothing(yddPath: string, ytdPath?: string): Promise<{ glbUrl?: string; error?: string }>
   exportItems(items: ClothingItem[]): Promise<ExportResult | null>
+  onExportProgress(callback: (data: { copied: number; total: number }) => void): () => void
 }
 
 declare global {

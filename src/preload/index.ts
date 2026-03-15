@@ -12,7 +12,15 @@ const api = {
   ): Promise<{ glbUrl?: string; error?: string }> =>
     ipcRenderer.invoke('converter:convert', yddPath, ytdPath),
   exportItems: (items: ClothingItem[]): Promise<ExportResult | null> =>
-    ipcRenderer.invoke('export:execute', items)
+    ipcRenderer.invoke('export:execute', items),
+  onExportProgress: (
+    callback: (data: { copied: number; total: number }) => void
+  ): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: { copied: number; total: number }): void =>
+      callback(data)
+    ipcRenderer.on('export:progress', handler)
+    return () => ipcRenderer.removeListener('export:progress', handler)
+  }
 }
 
 if (process.contextIsolated) {
