@@ -45,6 +45,12 @@ export interface ParsedYtd {
 
 export type ParsedFile = ParsedYdd | ParsedYtd
 
+export interface ExportResult {
+  exportedFiles: number
+  outputFolder: string
+  errors: string[]
+}
+
 export const CATEGORY_LABELS: Record<string, string> = {
   accs: 'Accessoires',
   jbib: 'Hauts / Vestes',
@@ -52,7 +58,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   feet: 'Chaussures',
   teef: 'Chaines',
   head: 'Têtes',
-  berd: 'Barbes',
+  berd: 'Masques',
   hair: 'Cheveux',
   uppr: 'Torso',
   hand: 'Mains / Gants',

@@ -8,9 +8,11 @@ import { scanFolder } from './lib/scanner'
 import { parseFiles } from './lib/parser'
 import { buildIndex } from './lib/indexer'
 import { convertToGlb } from './converter'
-import { getCacheDir } from './cache'
+import { getCacheDir, removeGlb } from './cache'
+import { exportItems } from './lib/exporter'
+import { initUpdater } from './updater'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -39,6 +41,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -83,20 +87,52 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle(
-    'converter:convert',
-    async (_event, yddPath: string, ytdPath?: string) => {
-      try {
-        const glbPath = await convertToGlb(yddPath, ytdPath)
-        const glbFileName = path.basename(glbPath)
-        const glbUrl = 'glb://model/' + encodeURIComponent(glbFileName)
-        return { glbUrl }
-      } catch (err) {
-        return { error: err instanceof Error ? err.message : String(err) }
-      }
+    'export:execute',
+    async (
+      event,
+      items: import('../shared/types').ClothingItem[],
+      offsets?: Record<string, number>
+    ) => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory', 'createDirectory'],
+        title: "Choisir le dossier d'export"
+      })
+      if (result.canceled || result.filePaths.length === 0) return null
+      const win = BrowserWindow.fromWebContents(event.sender)
+      return exportItems(
+        items,
+        result.filePaths[0],
+        (copied, total) => {
+          win?.webContents.send('export:progress', { copied, total })
+        },
+        offsets
+      )
     }
   )
 
-  createWindow()
+  ipcMain.handle('converter:convert', async (_event, yddPath: string, ytdPath?: string) => {
+    try {
+      const glbPath = await convertToGlb(yddPath, ytdPath)
+      const glbFileName = path.basename(glbPath)
+      const glbUrl = 'glb://model/' + encodeURIComponent(glbFileName)
+      return { glbUrl }
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('glb:release', (_event, glbUrl: string) => {
+    try {
+      const url = new URL(glbUrl)
+      const fileName = decodeURIComponent(url.pathname.replace(/^\//, ''))
+      removeGlb(fileName)
+    } catch {
+      // invalid URL — ignore
+    }
+  })
+
+  const mainWindow = createWindow()
+  initUpdater(mainWindow)
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

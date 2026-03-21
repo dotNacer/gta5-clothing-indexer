@@ -12,13 +12,26 @@ export function getCacheDir(): string {
   return cacheDir
 }
 
-export function getGlbPath(yddFileName: string): string {
-  const baseName = yddFileName.replace(/\.ydd$/i, '')
-  return path.join(getCacheDir(), `${baseName}.glb`)
+function sanitizeForFilename(s: string): string {
+  return s.replace(/[^a-zA-Z0-9_.-]/g, '_')
 }
 
-export function isConverted(yddFileName: string): boolean {
-  return fs.existsSync(getGlbPath(yddFileName))
+export function getGlbPath(yddFileName: string, ytdFileName?: string): string {
+  const baseName = yddFileName.replace(/\.ydd$/i, '')
+  if (!ytdFileName) {
+    return path.join(getCacheDir(), `${baseName}.glb`)
+  }
+  const ytdBase = sanitizeForFilename(ytdFileName.replace(/\.ytd$/i, ''))
+  return path.join(getCacheDir(), `${baseName}_${ytdBase}.glb`)
+}
+
+export function isConverted(yddFileName: string, ytdFileName?: string): boolean {
+  return fs.existsSync(getGlbPath(yddFileName, ytdFileName))
+}
+
+export function removeGlb(glbFileName: string): void {
+  const filePath = path.join(getCacheDir(), glbFileName)
+  fs.unlink(filePath, () => {})
 }
 
 export function clearCache(): void {

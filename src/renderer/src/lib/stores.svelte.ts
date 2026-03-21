@@ -1,4 +1,5 @@
-import type { ClothingItem } from '../../../shared/types'
+import type { ClothingItem, ExportResult } from '../../../shared/types'
+import { getThumbnailStore } from './thumbnails.svelte'
 
 let clothingItems = $state<ClothingItem[]>([])
 let searchQuery = $state('')
@@ -6,6 +7,12 @@ let genderFilter = $state<'all' | 'male' | 'female'>('all')
 let categoryFilter = $state<string>('all')
 let folderPath = $state<string | null>(null)
 let isScanning = $state(false)
+let selectedForExport = $state(new Set<string>())
+let isExporting = $state(false)
+let lastExportResult = $state<ExportResult | null>(null)
+let showExportPreview = $state(false)
+let exportProgress = $state<{ copied: number; total: number } | null>(null)
+let categoryOffsets = $state<Record<string, number>>({})
 
 const filteredItems = $derived.by(() => {
   let result = clothingItems
@@ -45,6 +52,10 @@ const availableCategories = $derived.by(() => {
 
 const totalCount = $derived(clothingItems.length)
 const filteredCount = $derived(filteredItems.length)
+const selectedForExportCount = $derived(selectedForExport.size)
+const selectedExportItems = $derived.by(() =>
+  clothingItems.filter((i) => selectedForExport.has(i.id))
+)
 
 export function getStore() {
   return {
@@ -87,6 +98,102 @@ export function getStore() {
     get filteredCount() {
       return filteredCount
     },
+    get selectedForExport() {
+      return selectedForExport
+    },
+    get selectedForExportCount() {
+      return selectedForExportCount
+    },
+    get selectedExportItems() {
+      return selectedExportItems
+    },
+    get isExporting() {
+      return isExporting
+    },
+    get lastExportResult() {
+      return lastExportResult
+    },
+    get showExportPreview() {
+      return showExportPreview
+    },
+    get exportProgress() {
+      return exportProgress
+    },
+    get categoryOffsets() {
+      return categoryOffsets
+    },
+    setCategoryOffset(category: string, offset: number) {
+      categoryOffsets = { ...categoryOffsets, [category]: offset }
+    },
+
+    toggleExportSelection(itemId: string) {
+      const next = new Set(selectedForExport)
+      if (next.has(itemId)) {
+        next.delete(itemId)
+      } else {
+        next.add(itemId)
+      }
+      selectedForExport = next
+    },
+
+    selectAllFiltered() {
+      const next = new Set(selectedForExport)
+      for (const item of filteredItems) {
+        next.add(item.id)
+      }
+      selectedForExport = next
+    },
+
+    clearExportSelection() {
+      selectedForExport = new Set()
+    },
+
+    isSelectedForExport(itemId: string): boolean {
+      return selectedForExport.has(itemId)
+    },
+
+    requestExport() {
+      const items = clothingItems.filter((i) => selectedForExport.has(i.id))
+      if (items.length === 0) return
+      showExportPreview = true
+    },
+
+    cancelExportPreview() {
+      showExportPreview = false
+      categoryOffsets = {}
+    },
+
+    async confirmAndExport(): Promise<ExportResult | null> {
+      showExportPreview = false
+      const items = clothingItems.filter((i) => selectedForExport.has(i.id))
+      if (items.length === 0) return null
+
+      isExporting = true
+      lastExportResult = null
+      exportProgress = null
+
+      const unsubscribe = window.api.onExportProgress?.((data) => {
+        exportProgress = data
+      })
+
+      try {
+        const result = await window.api.exportItems($state.snapshot(items), { ...categoryOffsets })
+        if (result) {
+          lastExportResult = result
+          selectedForExport = new Set()
+          categoryOffsets = {}
+        }
+        return result
+      } finally {
+        unsubscribe?.()
+        exportProgress = null
+        isExporting = false
+      }
+    },
+
+    dismissExportResult() {
+      lastExportResult = null
+    },
 
     async selectAndScan() {
       const selected = await window.api.selectFolder()
@@ -94,6 +201,7 @@ export function getStore() {
 
       folderPath = selected
       isScanning = true
+      getThumbnailStore().clear()
       try {
         clothingItems = await window.api.scanFolder(selected)
       } finally {

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Read(//c/Users/nacer/Documents/GTA/gta5-clothing-indexer/**)"
+    ]
+  }
+}
