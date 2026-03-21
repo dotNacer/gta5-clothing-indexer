@@ -23,7 +23,27 @@ const api = {
     ): void => callback(data)
     ipcRenderer.on('export:progress', handler)
     return () => ipcRenderer.removeListener('export:progress', handler)
-  }
+  },
+  onUpdateAvailable: (callback: (info: { version: string }) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, info: { version: string }): void =>
+      callback(info)
+    ipcRenderer.on('updater:update-available', handler)
+    return () => ipcRenderer.removeListener('updater:update-available', handler)
+  },
+  onDownloadProgress: (callback: (progress: { percent: number }) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: { percent: number }): void =>
+      callback(progress)
+    ipcRenderer.on('updater:download-progress', handler)
+    return () => ipcRenderer.removeListener('updater:download-progress', handler)
+  },
+  onUpdateDownloaded: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('updater:update-downloaded', handler)
+    return () => ipcRenderer.removeListener('updater:update-downloaded', handler)
+  },
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke('updater:download'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('updater:install'),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('updater:get-version')
 }
 
 if (process.contextIsolated) {

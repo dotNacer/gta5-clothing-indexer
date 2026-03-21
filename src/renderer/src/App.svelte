@@ -7,6 +7,7 @@
   import ExportDock from './components/ExportDock.svelte'
   import ExportPreview from './components/ExportPreview.svelte'
   import DragGhost from './components/DragGhost.svelte'
+  import UpdateNotification from './components/UpdateNotification.svelte'
   import { Toaster, toast } from 'svelte-sonner'
   import { getStore } from './lib/stores.svelte'
   import { getViewerStore } from './lib/viewer.svelte'
@@ -194,3 +195,4 @@
 {/if}
 
 <DragGhost />
+<UpdateNotification />

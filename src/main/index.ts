@@ -10,8 +10,9 @@ import { buildIndex } from './lib/indexer'
 import { convertToGlb } from './converter'
 import { getCacheDir, removeGlb } from './cache'
 import { exportItems } from './lib/exporter'
+import { initUpdater } from './updater'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -40,6 +41,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -128,7 +131,8 @@ app.whenReady().then(() => {
     }
   })
 
-  createWindow()
+  const mainWindow = createWindow()
+  initUpdater(mainWindow)
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
