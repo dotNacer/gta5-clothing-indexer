@@ -23,7 +23,8 @@ function computeNewFilename(
 export async function exportItems(
   items: ClothingItem[],
   outputFolder: string,
-  onProgress?: (copied: number, total: number) => void
+  onProgress?: (copied: number, total: number) => void,
+  offsets?: Record<string, number>
 ): Promise<ExportResult> {
   const grouped = new Map<string, ClothingItem[]>()
   for (const item of items) {
@@ -40,12 +41,13 @@ export async function exportItems(
   const mappings: FileMapping[] = []
   const errors: string[] = []
 
-  for (const [, groupItems] of grouped) {
+  for (const [category, groupItems] of grouped) {
     groupItems.sort((a, b) => a.componentNum - b.componentNum)
+    const offset = offsets?.[category] ?? 0
 
     for (let i = 0; i < groupItems.length; i++) {
       const item = groupItems[i]
-      const newNum = i
+      const newNum = i + offset
 
       if (item.yddPath) {
         mappings.push({

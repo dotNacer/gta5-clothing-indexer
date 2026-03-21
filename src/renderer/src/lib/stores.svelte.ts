@@ -1,4 +1,5 @@
 import type { ClothingItem, ExportResult } from '../../../shared/types'
+import { getThumbnailStore } from './thumbnails.svelte'
 
 let clothingItems = $state<ClothingItem[]>([])
 let searchQuery = $state('')
@@ -11,6 +12,7 @@ let isExporting = $state(false)
 let lastExportResult = $state<ExportResult | null>(null)
 let showExportPreview = $state(false)
 let exportProgress = $state<{ copied: number; total: number } | null>(null)
+let categoryOffsets = $state<Record<string, number>>({})
 
 const filteredItems = $derived.by(() => {
   let result = clothingItems
@@ -117,6 +119,12 @@ export function getStore() {
     get exportProgress() {
       return exportProgress
     },
+    get categoryOffsets() {
+      return categoryOffsets
+    },
+    setCategoryOffset(category: string, offset: number) {
+      categoryOffsets = { ...categoryOffsets, [category]: offset }
+    },
 
     toggleExportSelection(itemId: string) {
       const next = new Set(selectedForExport)
@@ -152,6 +160,7 @@ export function getStore() {
 
     cancelExportPreview() {
       showExportPreview = false
+      categoryOffsets = {}
     },
 
     async confirmAndExport(): Promise<ExportResult | null> {
@@ -168,10 +177,11 @@ export function getStore() {
       })
 
       try {
-        const result = await window.api.exportItems($state.snapshot(items))
+        const result = await window.api.exportItems($state.snapshot(items), { ...categoryOffsets })
         if (result) {
           lastExportResult = result
           selectedForExport = new Set()
+          categoryOffsets = {}
         }
         return result
       } finally {
@@ -191,6 +201,7 @@ export function getStore() {
 
       folderPath = selected
       isScanning = true
+      getThumbnailStore().clear()
       try {
         clothingItems = await window.api.scanFolder(selected)
       } finally {

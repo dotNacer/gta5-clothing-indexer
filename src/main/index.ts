@@ -8,7 +8,7 @@ import { scanFolder } from './lib/scanner'
 import { parseFiles } from './lib/parser'
 import { buildIndex } from './lib/indexer'
 import { convertToGlb } from './converter'
-import { getCacheDir } from './cache'
+import { getCacheDir, removeGlb } from './cache'
 import { exportItems } from './lib/exporter'
 
 function createWindow(): void {
@@ -85,16 +85,25 @@ app.whenReady().then(() => {
 
   ipcMain.handle(
     'export:execute',
-    async (event, items: import('../shared/types').ClothingItem[]) => {
+    async (
+      event,
+      items: import('../shared/types').ClothingItem[],
+      offsets?: Record<string, number>
+    ) => {
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: "Choisir le dossier d'export"
       })
       if (result.canceled || result.filePaths.length === 0) return null
       const win = BrowserWindow.fromWebContents(event.sender)
-      return exportItems(items, result.filePaths[0], (copied, total) => {
-        win?.webContents.send('export:progress', { copied, total })
-      })
+      return exportItems(
+        items,
+        result.filePaths[0],
+        (copied, total) => {
+          win?.webContents.send('export:progress', { copied, total })
+        },
+        offsets
+      )
     }
   )
 
@@ -106,6 +115,16 @@ app.whenReady().then(() => {
       return { glbUrl }
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('glb:release', (_event, glbUrl: string) => {
+    try {
+      const url = new URL(glbUrl)
+      const fileName = decodeURIComponent(url.pathname.replace(/^\//, ''))
+      removeGlb(fileName)
+    } catch {
+      // invalid URL — ignore
     }
   })
 

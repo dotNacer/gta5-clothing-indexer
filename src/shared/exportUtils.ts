@@ -1,10 +1,17 @@
 import type { ClothingItem } from './types'
 
 export interface ExportPreviewItem {
+  id: string
   originalFileName: string
   newYddName: string | null
   newYtdNames: string[]
   textureCount: number
+  gender: 'male' | 'female' | 'unknown'
+  componentNum: number
+  variant: string
+  categoryLabel: string
+  hasYdd: boolean
+  hasTextures: boolean
 }
 
 export interface ExportPreviewGroup {
@@ -43,7 +50,7 @@ function computeNewName(fileName: string, oldComponentNum: number, newComponentN
   return renamed + ext
 }
 
-export function computeExportPreview(items: ClothingItem[]): ExportPreviewGroup[] {
+export function computeExportPreview(items: ClothingItem[], offsets?: Record<string, number>): ExportPreviewGroup[] {
   const grouped = new Map<string, ClothingItem[]>()
   for (const item of items) {
     const group = grouped.get(item.category) || []
@@ -56,8 +63,9 @@ export function computeExportPreview(items: ClothingItem[]): ExportPreviewGroup[
   for (const [category, groupItems] of grouped) {
     const sorted = [...groupItems].sort((a, b) => a.componentNum - b.componentNum)
 
+    const offset = offsets?.[category] ?? 0
     const previewItems: ExportPreviewItem[] = sorted.map((item, i) => {
-      const newNum = i
+      const newNum = i + offset
 
       const newYddName = item.yddPath
         ? computeNewName(getBaseName(item.yddPath), item.componentNum, newNum)
@@ -68,10 +76,17 @@ export function computeExportPreview(items: ClothingItem[]): ExportPreviewGroup[
       )
 
       return {
+        id: item.id,
         originalFileName: item.fileName,
         newYddName,
         newYtdNames,
-        textureCount: item.ytdCount
+        textureCount: item.ytdCount,
+        gender: item.gender,
+        componentNum: item.componentNum,
+        variant: item.variant,
+        categoryLabel: item.categoryLabel,
+        hasYdd: item.hasYdd,
+        hasTextures: item.hasTextures
       }
     })
 

@@ -11,13 +11,16 @@ const api = {
     ytdPath?: string
   ): Promise<{ glbUrl?: string; error?: string }> =>
     ipcRenderer.invoke('converter:convert', yddPath, ytdPath),
-  exportItems: (items: ClothingItem[]): Promise<ExportResult | null> =>
-    ipcRenderer.invoke('export:execute', items),
-  onExportProgress: (
-    callback: (data: { copied: number; total: number }) => void
-  ): (() => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, data: { copied: number; total: number }): void =>
-      callback(data)
+  exportItems: (
+    items: ClothingItem[],
+    offsets?: Record<string, number>
+  ): Promise<ExportResult | null> => ipcRenderer.invoke('export:execute', items, offsets),
+  releaseGlb: (glbUrl: string): Promise<void> => ipcRenderer.invoke('glb:release', glbUrl),
+  onExportProgress: (callback: (data: { copied: number; total: number }) => void): (() => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      data: { copied: number; total: number }
+    ): void => callback(data)
     ipcRenderer.on('export:progress', handler)
     return () => ipcRenderer.removeListener('export:progress', handler)
   }
