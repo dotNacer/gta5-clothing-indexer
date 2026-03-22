@@ -1,36 +1,130 @@
 <script lang="ts">
-  import { fadeIn } from '$lib/animations'
-  import Button from './ui/button.svelte'
-
   type Props = { onSelectFolder: () => void }
   let { onSelectFolder }: Props = $props()
 </script>
 
-<div class="flex-1 flex items-center justify-center" use:fadeIn>
-  <div class="text-center max-w-md px-8">
-    <!-- Animated icon -->
-    <div class="mx-auto w-20 h-20 rounded-[var(--radius-xl)] bg-gradient-to-br from-primary/10 to-secondary/10 border border-border flex items-center justify-center mb-8 relative">
-      <svg class="w-9 h-9 text-primary/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-      </svg>
-      <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center">
-        <svg class="w-3 h-3 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-      </div>
-    </div>
+<div class="empty">
+  <div class="empty__glow" aria-hidden="true"></div>
 
-    <h2 class="text-xl font-bold text-text-primary mb-2 tracking-tight">
-      Bienvenue dans GTA5 Clothing Indexer
-    </h2>
-    <p class="text-sm text-text-secondary mb-8 leading-relaxed">
-      Sélectionnez un dossier contenant vos fichiers <span class="font-[family-name:var(--font-mono)] text-primary/80">.ydd</span> et <span class="font-[family-name:var(--font-mono)] text-primary/80">.ytd</span> pour commencer l'indexation et la prévisualisation 3D.
-    </p>
-    <Button onclick={onSelectFolder}>
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
-      </svg>
-      Choisir un dossier
-    </Button>
+  <div class="empty__icon">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+      <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/>
+      <line x1="12" y1="2" x2="12" y2="22"/>
+      <line x1="2" y1="8.5" x2="22" y2="8.5"/>
+      <line x1="2" y1="15.5" x2="22" y2="15.5"/>
+    </svg>
+  </div>
+
+  <h2 class="empty__title">GTA5 Clothing Indexer</h2>
+  <p class="empty__sub">Select a GTA V mods folder to begin indexing</p>
+
+  <button class="empty__btn" onclick={onSelectFolder}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+    </svg>
+    Choose folder
+  </button>
+
+  <div class="empty__hints">
+    <span class="hint">YDD + YTD files auto-detected</span>
+    <span class="hint__sep">·</span>
+    <span class="hint">3D preview included</span>
+    <span class="hint__sep">·</span>
+    <span class="hint">Export IDs</span>
   </div>
 </div>
+
+<style>
+  .empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty__glow {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 255, 200, 0.04) 0%,
+      rgba(167, 139, 250, 0.03) 40%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .empty__icon {
+    color: rgba(0, 255, 200, 0.25);
+    filter: drop-shadow(0 0 16px rgba(0, 255, 200, 0.2));
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-6px); }
+  }
+
+  .empty__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.04em;
+    margin: 0;
+  }
+
+  .empty__sub {
+    font-size: 12px;
+    color: #374151;
+    font-family: ui-monospace, monospace;
+    margin: 0;
+  }
+
+  .empty__btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 34px;
+    padding: 0 18px;
+    background: rgba(0, 255, 200, 0.08);
+    border: 1px solid rgba(0, 255, 200, 0.25);
+    border-radius: 6px;
+    color: #00ffc8;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .empty__btn:hover {
+    background: rgba(0, 255, 200, 0.14);
+    box-shadow: 0 0 16px rgba(0, 255, 200, 0.15);
+  }
+
+  .empty__hints {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .hint {
+    font-size: 10px;
+    font-family: ui-monospace, monospace;
+    color: #2d3748;
+    letter-spacing: 0.06em;
+  }
+  .hint__sep {
+    color: #1f2937;
+    font-size: 10px;
+  }
+</style>

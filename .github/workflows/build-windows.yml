@@ -1,0 +1,45 @@
+name: Build Windows (.exe)
+
+on:
+  push:
+    branches:
+      - 'poke/redesign-expert'
+      - 'main'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: false
+        default: 'poke/redesign-expert'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Electron app (Windows)
+        run: npm run build:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta5-clothing-indexer-windows
+          path: |
+            dist/*.exe
+            dist/*-setup.exe
+          if-no-files-found: warn
+          retention-days: 30
