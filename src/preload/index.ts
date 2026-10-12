@@ -10,7 +10,10 @@ const api = {
     yddPath: string,
     ytdPath?: string
   ): Promise<{ glbUrl?: string; error?: string }> =>
-    ipcRenderer.invoke('converter:convert', yddPath, ytdPath)
+    ipcRenderer.invoke('converter:convert', yddPath, ytdPath),
+  selectOutputFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:selectOutputFolder'),
+  writeThumbnail: (outputDir: string, fileName: string, dataUrl: string): Promise<void> =>
+    ipcRenderer.invoke('thumbnails:write', outputDir, fileName, dataUrl)
 }
 
 if (process.contextIsolated) {

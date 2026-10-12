@@ -2,7 +2,7 @@ import { execFile } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { app } from 'electron'
-import { getGlbPath, getCacheDir, isConverted } from './cache'
+import { getGlbPath, isConverted } from './cache'
 
 function getConverterPath(): string {
   if (app.isPackaged) {

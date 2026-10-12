@@ -1,4 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog, protocol, net } from 'electron'
+import fs from 'fs'
 import { join } from 'path'
 import path from 'path'
 import { pathToFileURL } from 'url'
@@ -74,6 +75,27 @@ app.whenReady().then(() => {
     })
     if (result.canceled || result.filePaths.length === 0) return null
     return result.filePaths[0]
+  })
+
+  ipcMain.handle('dialog:selectOutputFolder', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Choisir le dossier de sortie des thumbnails'
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  })
+
+  ipcMain.handle('thumbnails:write', async (_event, outputDir: string, fileName: string, dataUrl: string) => {
+    if (!/^[a-zA-Z0-9._-]+\.png$/.test(fileName)) throw new Error('Nom de fichier thumbnail invalide.')
+    const match = /^data:image\/png;base64,([a-zA-Z0-9+/=]+)$/.exec(dataUrl)
+    if (!match) throw new Error('Image PNG invalide.')
+    const target = path.resolve(outputDir, fileName)
+    if (path.dirname(target) !== path.resolve(outputDir)) throw new Error('Chemin de sortie invalide.')
+    fs.mkdirSync(outputDir, { recursive: true })
+    const temporary = `${target}.tmp`
+    fs.writeFileSync(temporary, Buffer.from(match[1], 'base64'))
+    fs.renameSync(temporary, target)
   })
 
   ipcMain.handle('indexer:scan', async (_event, folderPath: string) => {

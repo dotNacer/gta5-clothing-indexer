@@ -8,6 +8,8 @@ interface ClothingIndexerAPI {
     yddPath: string,
     ytdPath?: string
   ): Promise<{ glbUrl?: string; error?: string }>
+  selectOutputFolder(): Promise<string | null>
+  writeThumbnail(outputDir: string, fileName: string, dataUrl: string): Promise<void>
 }
 
 declare global {

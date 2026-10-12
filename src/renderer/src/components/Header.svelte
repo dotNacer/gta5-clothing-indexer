@@ -3,11 +3,14 @@
     searchQuery: string
     folderPath: string | null
     isScanning: boolean
+    isExporting: boolean
+    exportLabel: string
     onSelectFolder: () => void
+    onExport: () => void
     onSearchChange: (value: string) => void
   }
 
-  let { searchQuery, folderPath, isScanning, onSelectFolder, onSearchChange }: Props = $props()
+  let { searchQuery, folderPath, isScanning, isExporting, exportLabel, onSelectFolder, onExport, onSearchChange }: Props = $props()
 </script>
 
 <header class="flex items-center gap-4 px-6 py-4 border-b border-white/[0.06] bg-[#0c0c0e]/80 backdrop-blur-xl">
@@ -38,6 +41,13 @@
       <span class="text-xs text-stone-500 max-w-[200px] truncate" title={folderPath}>
         {folderPath}
       </span>
+      <button
+        onclick={onExport}
+        disabled={isScanning || isExporting}
+        class="h-9 px-4 rounded-lg border border-white/15 hover:border-orange-400/60 disabled:opacity-50 text-sm text-stone-100 transition-colors cursor-pointer"
+      >
+        {isExporting ? exportLabel : 'Exporter PNG transparents'}
+      </button>
     {/if}
     <button
       onclick={onSelectFolder}

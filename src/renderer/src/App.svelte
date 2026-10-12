@@ -6,9 +6,36 @@
   import Viewer3D from './components/Viewer3D.svelte'
   import { getStore } from './lib/stores.svelte'
   import { getViewerStore } from './lib/viewer.svelte'
+  import { renderTransparentThumbnail } from './lib/thumbnail-renderer'
+  import { createThumbnailJobs } from '../../shared/thumbnail-jobs'
 
   const store = getStore()
   const viewer = getViewerStore()
+
+  let isExporting = $state(false)
+  let exportLabel = $state('')
+
+  async function exportTransparentThumbnails(): Promise<void> {
+    const outputDir = await window.api.selectOutputFolder()
+    if (!outputDir) return
+    const jobs = createThumbnailJobs(store.items)
+    if (!jobs.length) return
+
+    isExporting = true
+    try {
+      for (let index = 0; index < jobs.length; index += 1) {
+        const job = jobs[index]
+        exportLabel = `${index + 1}/${jobs.length}`
+        const converted = await window.api.convertClothing(job.yddPath, job.ytdPath)
+        if (!converted.glbUrl) continue
+        const png = await renderTransparentThumbnail(converted.glbUrl)
+        await window.api.writeThumbnail(outputDir, job.outputFileName, png)
+      }
+    } finally {
+      isExporting = false
+      exportLabel = ''
+    }
+  }
 
   const viewerLabel = $derived(
     viewer.selectedItem
@@ -22,7 +49,10 @@
     searchQuery={store.searchQuery}
     folderPath={store.folderPath}
     isScanning={store.isScanning}
+    isExporting={isExporting}
+    exportLabel={exportLabel}
     onSelectFolder={() => store.selectAndScan()}
+    onExport={exportTransparentThumbnails}
     onSearchChange={(v) => (store.searchQuery = v)}
   />
 
